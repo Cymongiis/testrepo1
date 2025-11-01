@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>백테스팅 시뮬레이터 - 초보자용</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .settings-panel {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        .settings-panel h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .setting-group {
+            margin-bottom: 20px;
+        }
+
+        .setting-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+        }
+
+        .setting-group input,
+        .setting-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .setting-group input:focus,
+        .setting-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .setting-group small {
+            display: block;
+            margin-top: 5px;
+            color: #777;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        button {
+            flex: 1;
+            padding: 15px 30px;
+            font-size: 1.1em;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .results-panel {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .results-panel.active {
+            display: block;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .stat-card.positive {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .stat-card.negative {
+            background: linear-gradient(135deg, #ee0979 0%, #ff6a00 100%);
+        }
+
+        .stat-card h3 {
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+
+        .stat-card .value {
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border: 2px solid #e0e0e0;
+        }
+
+        .chart-container h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        #priceChart {
+            width: 100%;
+            height: 400px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+        }
+
+        .trades-table {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            border: 2px solid #e0e0e0;
+        }
+
+        .trades-table h3 {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            color: #333;
+            margin: 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #555;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .buy {
+            color: #38ef7d;
+            font-weight: 600;
+        }
+
+        .sell {
+            color: #ff6a00;
+            font-weight: 600;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+
+        .info-box h4 {
+            color: #1976d2;
+            margin-bottom: 5px;
+        }
+
+        .info-box p {
+            color: #555;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📈 백테스팅 시뮬레이터</h1>
+            <p>초보자를 위한 간단한 투자 전략 시뮬레이션</p>
+        </div>
+
+        <div class="content">
+            <div class="info-box">
+                <h4>💡 백테스팅이란?</h4>
+                <p>백테스팅은 과거 데이터를 사용하여 투자 전략의 성과를 테스트하는 방법입니다.
+                이 시뮬레이터는 <strong>이동평균선 교차 전략</strong>을 사용합니다:
+                단기 이동평균선이 장기 이동평균선을 상향 돌파하면 매수, 하향 돌파하면 매도합니다.</p>
+            </div>
+
+            <div class="settings-panel">
+                <h2>⚙️ 시뮬레이션 설정</h2>
+
+                <div class="setting-group">
+                    <label for="initialCapital">초기 자본금 (원)</label>
+                    <input type="number" id="initialCapital" value="10000000" min="1000000" step="1000000">
+                    <small>시뮬레이션을 시작할 초기 투자 금액</small>
+                </div>
+
+                <div class="setting-group">
+                    <label for="shortMA">단기 이동평균선 (일)</label>
+                    <input type="number" id="shortMA" value="5" min="2" max="50">
+                    <small>짧은 기간의 평균 가격 (일반적으로 5~20일)</small>
+                </div>
+
+                <div class="setting-group">
+                    <label for="longMA">장기 이동평균선 (일)</label>
+                    <input type="number" id="longMA" value="20" min="10" max="200">
+                    <small>긴 기간의 평균 가격 (일반적으로 20~200일)</small>
+                </div>
+
+                <div class="setting-group">
+                    <label for="days">시뮬레이션 기간 (일)</label>
+                    <input type="number" id="days" value="365" min="100" max="1000">
+                    <small>과거 몇 일치의 데이터를 시뮬레이션할지 선택</small>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn-primary" onclick="runBacktest()">🚀 시뮬레이션 시작</button>
+                    <button class="btn-secondary" onclick="resetSimulation()">🔄 초기화</button>
+                </div>
+            </div>
+
+            <div class="results-panel" id="resultsPanel">
+                <div class="stats-grid" id="statsGrid"></div>
+
+                <div class="chart-container">
+                    <h3>📊 주가 및 매매 신호 차트</h3>
+                    <canvas id="priceChart"></canvas>
+                </div>
+
+                <div class="trades-table">
+                    <h3>💼 거래 내역</h3>
+                    <div style="overflow-x: auto;">
+                        <table id="tradesTable">
+                            <thead>
+                                <tr>
+                                    <th>날짜</th>
+                                    <th>거래 유형</th>
+                                    <th>가격 (원)</th>
+                                    <th>수량</th>
+                                    <th>금액 (원)</th>
+                                    <th>잔고 (원)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tradesBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let priceData = [];
+        let trades = [];
+
+        // 랜덤 주가 데이터 생성 (현실적인 주가 움직임 시뮬레이션)
+        function generatePriceData(days) {
+            const prices = [];
+            let price = 50000; // 초기 주가
+
+            for (let i = 0; i < days; i++) {
+                // 랜덤 워크 + 추세
+                const change = (Math.random() - 0.48) * 0.03; // 약간의 상승 편향
+                price = price * (1 + change);
+
+                // 가격이 너무 낮아지지 않도록
+                if (price < 10000) price = 10000;
+
+                prices.push({
+                    day: i + 1,
+                    price: Math.round(price),
+                    date: new Date(Date.now() - (days - i) * 24 * 60 * 60 * 1000)
+                });
+            }
+
+            return prices;
+        }
+
+        // 이동평균선 계산
+        function calculateMA(prices, period) {
+            const ma = [];
+            for (let i = 0; i < prices.length; i++) {
+                if (i < period - 1) {
+                    ma.push(null);
+                } else {
+                    let sum = 0;
+                    for (let j = 0; j < period; j++) {
+                        sum += prices[i - j].price;
+                    }
+                    ma.push(sum / period);
+                }
+            }
+            return ma;
+        }
+
+        // 백테스팅 실행
+        function runBacktest() {
+            const initialCapital = parseFloat(document.getElementById('initialCapital').value);
+            const shortPeriod = parseInt(document.getElementById('shortMA').value);
+            const longPeriod = parseInt(document.getElementById('longMA').value);
+            const days = parseInt(document.getElementById('days').value);
+
+            // 유효성 검사
+            if (shortPeriod >= longPeriod) {
+                alert('단기 이동평균선은 장기 이동평균선보다 짧아야 합니다!');
+                return;
+            }
+
+            // 데이터 생성
+            priceData = generatePriceData(days);
+            const shortMA = calculateMA(priceData, shortPeriod);
+            const longMA = calculateMA(priceData, longPeriod);
+
+            // 백테스팅 로직
+            let cash = initialCapital;
+            let shares = 0;
+            let position = false; // false = 보유 안함, true = 보유 중
+            trades = [];
+
+            for (let i = longPeriod; i < priceData.length; i++) {
+                const currentPrice = priceData[i].price;
+                const prevShortMA = shortMA[i - 1];
+                const prevLongMA = longMA[i - 1];
+                const currShortMA = shortMA[i];
+                const currLongMA = longMA[i];
+
+                // 골든 크로스 (매수 신호)
+                if (!position && prevShortMA <= prevLongMA && currShortMA > currLongMA) {
+                    const sharesToBuy = Math.floor(cash / currentPrice);
+                    if (sharesToBuy > 0) {
+                        const cost = sharesToBuy * currentPrice;
+                        cash -= cost;
+                        shares += sharesToBuy;
+                        position = true;
+
+                        trades.push({
+                            day: priceData[i].day,
+                            date: priceData[i].date,
+                            type: 'BUY',
+                            price: currentPrice,
+                            shares: sharesToBuy,
+                            amount: cost,
+                            balance: cash
+                        });
+                    }
+                }
+                // 데드 크로스 (매도 신호)
+                else if (position && prevShortMA >= prevLongMA && currShortMA < currLongMA) {
+                    const revenue = shares * currentPrice;
+                    cash += revenue;
+
+                    trades.push({
+                        day: priceData[i].day,
+                        date: priceData[i].date,
+                        type: 'SELL',
+                        price: currentPrice,
+                        shares: shares,
+                        amount: revenue,
+                        balance: cash
+                    });
+
+                    shares = 0;
+                    position = false;
+                }
+            }
+
+            // 마지막에 보유 중이면 현재 가격으로 매도
+            if (shares > 0) {
+                const lastPrice = priceData[priceData.length - 1].price;
+                cash += shares * lastPrice;
+                trades.push({
+                    day: priceData[priceData.length - 1].day,
+                    date: priceData[priceData.length - 1].date,
+                    type: 'SELL',
+                    price: lastPrice,
+                    shares: shares,
+                    amount: shares * lastPrice,
+                    balance: cash
+                });
+                shares = 0;
+            }
+
+            // 결과 표시
+            displayResults(initialCapital, cash, shortMA, longMA);
+        }
+
+        // 결과 표시
+        function displayResults(initialCapital, finalCapital, shortMA, longMA) {
+            const returnRate = ((finalCapital - initialCapital) / initialCapital) * 100;
+            const profit = finalCapital - initialCapital;
+
+            // 통계 표시
+            const statsHTML = `
+                <div class="stat-card">
+                    <h3>초기 자본금</h3>
+                    <div class="value">${initialCapital.toLocaleString()}원</div>
+                </div>
+                <div class="stat-card">
+                    <h3>최종 자본금</h3>
+                    <div class="value">${Math.round(finalCapital).toLocaleString()}원</div>
+                </div>
+                <div class="stat-card ${returnRate >= 0 ? 'positive' : 'negative'}">
+                    <h3>수익률</h3>
+                    <div class="value">${returnRate.toFixed(2)}%</div>
+                </div>
+                <div class="stat-card ${profit >= 0 ? 'positive' : 'negative'}">
+                    <h3>손익</h3>
+                    <div class="value">${Math.round(profit).toLocaleString()}원</div>
+                </div>
+                <div class="stat-card">
+                    <h3>총 거래 횟수</h3>
+                    <div class="value">${trades.length}회</div>
+                </div>
+            `;
+            document.getElementById('statsGrid').innerHTML = statsHTML;
+
+            // 거래 내역 표시
+            let tradesHTML = '';
+            trades.forEach(trade => {
+                const dateStr = trade.date.toLocaleDateString('ko-KR');
+                const typeClass = trade.type === 'BUY' ? 'buy' : 'sell';
+                const typeText = trade.type === 'BUY' ? '매수' : '매도';
+
+                tradesHTML += `
+                    <tr>
+                        <td>${dateStr}</td>
+                        <td class="${typeClass}">${typeText}</td>
+                        <td>${trade.price.toLocaleString()}원</td>
+                        <td>${trade.shares.toLocaleString()}주</td>
+                        <td>${trade.amount.toLocaleString()}원</td>
+                        <td>${Math.round(trade.balance).toLocaleString()}원</td>
+                    </tr>
+                `;
+            });
+            document.getElementById('tradesBody').innerHTML = tradesHTML;
+
+            // 차트 그리기
+            drawChart(shortMA, longMA);
+
+            // 결과 패널 표시
+            document.getElementById('resultsPanel').classList.add('active');
+            document.getElementById('resultsPanel').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // 차트 그리기
+        function drawChart(shortMA, longMA) {
+            const canvas = document.getElementById('priceChart');
+            const ctx = canvas.getContext('2d');
+
+            // 캔버스 크기 설정
+            canvas.width = canvas.offsetWidth;
+            canvas.height = 400;
+
+            const width = canvas.width;
+            const height = canvas.height;
+            const padding = 40;
+
+            // 데이터 범위 계산
+            const prices = priceData.map(d => d.price);
+            const maxPrice = Math.max(...prices);
+            const minPrice = Math.min(...prices);
+            const priceRange = maxPrice - minPrice;
+
+            // 배경
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, width, height);
+
+            // 그리드
+            ctx.strokeStyle = '#e0e0e0';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 5; i++) {
+                const y = padding + (height - 2 * padding) * i / 5;
+                ctx.beginPath();
+                ctx.moveTo(padding, y);
+                ctx.lineTo(width - padding, y);
+                ctx.stroke();
+            }
+
+            // Y축 레이블
+            ctx.fillStyle = '#666';
+            ctx.font = '12px sans-serif';
+            ctx.textAlign = 'right';
+            for (let i = 0; i <= 5; i++) {
+                const y = padding + (height - 2 * padding) * i / 5;
+                const price = maxPrice - (priceRange * i / 5);
+                ctx.fillText(Math.round(price).toLocaleString(), padding - 10, y + 4);
+            }
+
+            // 가격 선 그리기
+            function drawLine(data, color, lineWidth = 2) {
+                ctx.strokeStyle = color;
+                ctx.lineWidth = lineWidth;
+                ctx.beginPath();
+
+                let started = false;
+                for (let i = 0; i < priceData.length; i++) {
+                    if (data[i] !== null && data[i] !== undefined) {
+                        const x = padding + (width - 2 * padding) * i / (priceData.length - 1);
+                        const y = height - padding - ((data[i] - minPrice) / priceRange) * (height - 2 * padding);
+
+                        if (!started) {
+                            ctx.moveTo(x, y);
+                            started = true;
+                        } else {
+                            ctx.lineTo(x, y);
+                        }
+                    }
+                }
+                ctx.stroke();
+            }
+
+            // 주가
+            drawLine(prices, '#667eea', 3);
+
+            // 단기 이동평균선
+            drawLine(shortMA, '#38ef7d', 2);
+
+            // 장기 이동평균선
+            drawLine(longMA, '#ff6a00', 2);
+
+            // 매매 신호 표시
+            trades.forEach(trade => {
+                const index = priceData.findIndex(d => d.day === trade.day);
+                if (index !== -1) {
+                    const x = padding + (width - 2 * padding) * index / (priceData.length - 1);
+                    const y = height - padding - ((trade.price - minPrice) / priceRange) * (height - 2 * padding);
+
+                    ctx.fillStyle = trade.type === 'BUY' ? '#38ef7d' : '#ff6a00';
+                    ctx.beginPath();
+                    ctx.arc(x, y, 6, 0, 2 * Math.PI);
+                    ctx.fill();
+
+                    ctx.strokeStyle = '#fff';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+            });
+
+            // 범례
+            ctx.textAlign = 'left';
+            ctx.font = 'bold 14px sans-serif';
+
+            ctx.fillStyle = '#667eea';
+            ctx.fillRect(width - 200, 20, 20, 3);
+            ctx.fillStyle = '#333';
+            ctx.fillText('주가', width - 170, 25);
+
+            ctx.fillStyle = '#38ef7d';
+            ctx.fillRect(width - 200, 40, 20, 3);
+            ctx.fillStyle = '#333';
+            ctx.fillText('단기 이동평균선', width - 170, 45);
+
+            ctx.fillStyle = '#ff6a00';
+            ctx.fillRect(width - 200, 60, 20, 3);
+            ctx.fillStyle = '#333';
+            ctx.fillText('장기 이동평균선', width - 170, 65);
+        }
+
+        // 초기화
+        function resetSimulation() {
+            document.getElementById('resultsPanel').classList.remove('active');
+            document.getElementById('initialCapital').value = '10000000';
+            document.getElementById('shortMA').value = '5';
+            document.getElementById('longMA').value = '20';
+            document.getElementById('days').value = '365';
+        }
+
+        // 페이지 로드 시 차트 캔버스 초기화
+        window.addEventListener('resize', () => {
+            if (priceData.length > 0) {
+                const shortPeriod = parseInt(document.getElementById('shortMA').value);
+                const longPeriod = parseInt(document.getElementById('longMA').value);
+                const shortMA = calculateMA(priceData, shortPeriod);
+                const longMA = calculateMA(priceData, longPeriod);
+                drawChart(shortMA, longMA);
+            }
+        });
+    </script>
+</body>
+</html>
